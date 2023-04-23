@@ -10,14 +10,16 @@
 
 using namespace std;
 
-static constexpr size_t NREPS = 32;
+static constexpr size_t NREPS = 64;
 static constexpr size_t NSEGS = 128;
 static constexpr size_t MAX_SEG_LEN = 2048;
 
 int main()
 {
   try {
+    cout << "start test\n";
     auto rd = get_random_engine();
+    rd.seed(2);
 
     // overlapping segments
     for ( unsigned rep_no = 0; rep_no < NREPS; ++rep_no ) {

@@ -3,9 +3,39 @@
 #include "byte_stream.hh"
 
 #include <string>
+#include <queue>
+
+typedef std::pair<uint64_t, std::string> key;
+
+struct Interval {
+  uint64_t start, end;
+  std::string data;
+};
+
+class Intervals
+{
+protected: 
+  std::vector<Interval> arr;
+  uint64_t size_;
+public:
+  explicit Intervals();
+  void insertInterval(Interval in);
+  uint64_t size() const;
+  Interval top() const;
+  void pop();
+  bool empty() const;
+  void print();
+};
+
 
 class Reassembler
 {
+protected:
+  uint64_t index;
+  // std::priority_queue<key, std::vector<key>, std::greater<key>> pq;
+  int last_substring_index;
+  Intervals index_intervals;
+
 public:
   /*
    * Insert a new substring to be reassembled into a ByteStream.
@@ -27,6 +57,7 @@ public:
    *
    * The Reassembler should close the stream after writing the last byte.
    */
+  explicit Reassembler();
   void insert( uint64_t first_index, std::string data, bool is_last_substring, Writer& output );
 
   // How many bytes are stored in the Reassembler itself?
