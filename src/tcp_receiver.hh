@@ -7,6 +7,10 @@
 class TCPReceiver
 {
 public:
+  std::optional<Wrap32> ISN;
+  uint16_t ackno = 0;
+  uint64_t str_bytes = 0;
+  uint64_t re_index = 0;
   /*
    * The TCPReceiver receives TCPSenderMessages, inserting their payload into the Reassembler
    * at the correct stream index.

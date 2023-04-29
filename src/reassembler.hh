@@ -32,7 +32,6 @@ class Reassembler
 {
 protected:
   uint64_t index;
-  // std::priority_queue<key, std::vector<key>, std::greater<key>> pq;
   int last_substring_index;
   Intervals index_intervals;
 
@@ -62,4 +61,5 @@ public:
 
   // How many bytes are stored in the Reassembler itself?
   uint64_t bytes_pending() const;
+  uint64_t current_index();
 };

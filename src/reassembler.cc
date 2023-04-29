@@ -33,12 +33,12 @@ void Intervals::insertInterval(Interval in) {
     if (top.end < arr.at(i).start) {
       s.push(arr.at(i));
     } else if (top.end < arr.at(i).end) {
-      // cout << "substr 1" << top.start << "  " <<  top.end << "  " << arr.at(i).start << "  " << arr.at(i).end << "\n";
+      // cout << "substr 1 " << top.start << "  " <<  top.end << "  " << arr.at(i).start << "  " << arr.at(i).end << "\n";
       top.data += arr.at(i).data.substr(top.end - arr.at(i).start, arr.at(i).data.length() - top.end + arr.at(i).start + 1);
-      top.end = arr.at(i).end;
-      // cout << "substr 2" << top.end - arr.at(i).start << "  " << arr.at(i).data.length() - top.end + arr.at(i).start + 1 << "\n";
-      // cout << "data concatenated is " << top.data << "\n";
+      // cout << "substr 2 " << top.end - arr.at(i).start << "  " << arr.at(i).data.length() - top.end + arr.at(i).start + 1 << "\n";
       size_ -= top.end - arr.at(i).start;
+      top.end = arr.at(i).end;
+      // cout << "data concatenated is " << top.data << "\n";
       // cout << "size -- " << size_ << " \n";
       s.pop();
       s.push(top);
@@ -72,7 +72,7 @@ uint64_t Intervals::size() const {
 }
 
 void Intervals::print() {
-  cout << "priting current intervals " << size_ << "\n";
+  // cout << "priting current intervals " << size_ << "\n";
   for (unsigned int i = 0; i < arr.size(); i++) {
     cout << i << "   " << arr.at(i).start << "  " << arr.at(i).end << "  " << arr.at(i).data << " \n";
   }
@@ -87,10 +87,11 @@ void Reassembler::insert( uint64_t first_index, string data, bool is_last_substr
 
   // cout << "==============================\n";
 
-  // cout << "pushing " << "  start index  " << first_index << " length " << data.length() << "\n";
-  // cout << "index " << index << "\n";
+  // cout << "pushing start index  " << first_index << " length " << data.length() << "string " << data << "\n";
+  // cout << "first_index " << first_index << " last string index " << last_substring_index << "\n";
 
   if (is_last_substring) {
+    // cout << "last substring \n";
     last_substring_index = first_index;
   }
 
@@ -126,7 +127,11 @@ void Reassembler::insert( uint64_t first_index, string data, bool is_last_substr
     }
 
   } else {
-    index_intervals.insertInterval({first_index, first_index + data.length(), data});
+    uint64_t end_index = min(first_index + data.length(), index + output.available_capacity()); 
+
+    // cout << "start " << first_index << " end " << end_index << "\n";
+
+    index_intervals.insertInterval({first_index, end_index, data.substr(0, end_index - first_index)});
     // index_intervals.print();
   }
   
@@ -136,4 +141,9 @@ uint64_t Reassembler::bytes_pending() const
 {
   // Your code here.
   return index_intervals.size();
+}
+
+uint64_t Reassembler::current_index()
+{
+  return index;
 }
