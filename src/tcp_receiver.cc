@@ -10,7 +10,6 @@ void TCPReceiver::receive( TCPSenderMessage message, Reassembler& reassembler, W
     ISN = message.seqno;
   }
   if (ISN) {
-    ackno += message.sequence_length();
     auto isn = *std::move(ISN);
     string msg = message.payload.release();
     reassembler.insert(message.seqno.unwrap(isn, reassembler.bytes_pending()) - str_bytes, msg, message.FIN, inbound_stream);
