@@ -9,6 +9,7 @@
 #include <optional>
 #include <queue>
 #include <unordered_map>
+#include <tuple>
 #include <utility>
 
 // A "network interface" that connects IP (the internet layer, or network layer)
@@ -40,6 +41,23 @@ private:
 
   // IP (known as Internet-layer or network-layer) address of the interface
   Address ip_address_;
+
+  // mapping from ip addr -> ethernet addr (valid)
+  std::unordered_map<uint32_t, EthernetAddress> address_mapping_;
+
+  // queue time mapping created for ip addr
+  std::queue<std::tuple<uint32_t, size_t>> mapping_queue_;
+
+  // mapping from ip addr to arp rqst (valid)
+  std::unordered_map<uint32_t, EthernetFrame> arp_mapping_;
+
+  // queue time arp rqst is sent
+  std::queue<std::tuple<uint32_t, size_t>> arp_queue_;
+
+  std::queue<EthernetFrame> send_queue_;
+
+  size_t time_;
+
 
 public:
   // Construct a network interface with given Ethernet (network-access-layer) and IP (internet-layer)
