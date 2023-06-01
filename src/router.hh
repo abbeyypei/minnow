@@ -48,12 +48,20 @@ public:
   }
 };
 
+struct RoutingInfo {
+  uint32_t route_prefix;
+  uint8_t prefix_length;
+  std::optional<Address> next_hop;
+  size_t interface_num;
+};
+
 // A router that has multiple network interfaces and
 // performs longest-prefix-match routing between them.
 class Router
 {
   // The router's collection of network interfaces
   std::vector<AsyncNetworkInterface> interfaces_ {};
+  std::vector<struct RoutingInfo> router_table_ {};
 
 public:
   // Add an interface to the router

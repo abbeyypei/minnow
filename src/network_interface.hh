@@ -54,8 +54,10 @@ private:
   // queue time arp rqst is sent
   std::queue<std::tuple<uint32_t, size_t>> arp_queue_;
 
+  // queue for messages to be sent
   std::queue<EthernetFrame> send_queue_;
 
+  // current time
   size_t time_;
 
 

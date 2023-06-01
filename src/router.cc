@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <limits>
+#include <cmath>
 
 using namespace std;
 
@@ -20,10 +21,54 @@ void Router::add_route( const uint32_t route_prefix,
        << static_cast<int>( prefix_length ) << " => " << ( next_hop.has_value() ? next_hop->ip() : "(direct)" )
        << " on interface " << interface_num << "\n";
 
-  (void)route_prefix;
-  (void)prefix_length;
-  (void)next_hop;
-  (void)interface_num;
+  router_table_.push_back({
+    route_prefix,
+    prefix_length,
+    next_hop,
+    interface_num,
+  });
+
 }
 
-void Router::route() {}
+void Router::route() {
+  for(size_t i = 0; i < interfaces_.size(); i++) {
+    const auto msg = interface(i).maybe_receive();
+    if ( msg.has_value() ) {
+      InternetDatagram datagram = msg.value();
+      uint32_t dst_addr = datagram.header.dst;
+      if (datagram.header.ttl > 1) {
+        datagram.header.ttl --;
+        datagram.header.compute_checksum();
+
+        int8_t max_prefix_len = -1;
+        struct RoutingInfo max_route = {0, 0, {}, 0};
+        for (struct RoutingInfo r_info : router_table_) {
+          if (r_info.prefix_length == 0 && max_prefix_len < static_cast<int8_t>(r_info.prefix_length)) {
+            max_prefix_len = 0;
+            max_route = r_info;
+          } else {
+            if (dst_addr / static_cast<uint32_t>(pow(2, (32 - r_info.prefix_length))) == (r_info.route_prefix / static_cast<uint32_t>(pow(2, (32 - r_info.prefix_length))))) {
+              if (max_prefix_len < static_cast<int8_t>(r_info.prefix_length)) {
+                max_prefix_len = static_cast<int8_t>(r_info.prefix_length);
+                max_route = r_info;
+              }
+            }
+          }
+        }
+
+        if (max_prefix_len >= 0) {
+          if (max_route.next_hop.has_value()) {
+            Address dst = max_route.next_hop.value();
+            interface(max_route.interface_num).send_datagram(datagram, dst);
+          } else {
+            interface(max_route.interface_num).send_datagram(datagram, Address::from_ipv4_numeric(dst_addr));
+          }
+          
+        }
+      }
+
+
+    }
+
+  }
+}

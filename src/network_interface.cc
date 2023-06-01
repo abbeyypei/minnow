@@ -28,8 +28,6 @@ NetworkInterface::NetworkInterface( const EthernetAddress& ethernet_address, con
 void NetworkInterface::send_datagram( const InternetDatagram& dgram, const Address& next_hop )
 {
   uint32_t ip = next_hop.ipv4_numeric();
-  Serializer ser = Serializer();
-  dgram.serialize(ser);
 
   if (address_mapping_.find(ip) == address_mapping_.end()) {
     if (arp_mapping_.find(ip) == arp_mapping_.end()) {
@@ -56,7 +54,7 @@ void NetworkInterface::send_datagram( const InternetDatagram& dgram, const Addre
           .src = ethernet_address_,
           .type = EthernetHeader::TYPE_IPv4,
         },
-        .payload = ser.output(),
+        .payload = serialize(dgram),
       };
 
       arp_mapping_[ip] = datagram;
@@ -71,7 +69,7 @@ void NetworkInterface::send_datagram( const InternetDatagram& dgram, const Addre
         .src = ethernet_address_,
         .type = EthernetHeader::TYPE_IPv4,
       },
-      .payload = ser.output(),
+      .payload = serialize(dgram),
     };
     send_queue_.push(frame);
   }
@@ -81,27 +79,23 @@ void NetworkInterface::send_datagram( const InternetDatagram& dgram, const Addre
 // frame: the incoming Ethernet frame
 optional<InternetDatagram> NetworkInterface::recv_frame( const EthernetFrame& frame )
 {
-  // cout << frame.header.to_string() << endl;
   if (!(frame.header.dst == ETHERNET_BROADCAST || frame.header.dst == ethernet_address_)) {
-    // cout << frame.header.to_string() << endl;
-    // cout << "recv not valid \n";
     return {};
   }
   if (frame.header.type == EthernetHeader::TYPE_IPv4) {
-    InternetDatagram datagram = InternetDatagram();
+    InternetDatagram datagram;
     if (parse(datagram, frame.payload)) {
       return datagram;
     }
   }
   if (frame.header.type == EthernetHeader::TYPE_ARP) {
-    ARPMessage msg = ARPMessage();
+    ARPMessage msg;
     if (parse(msg, frame.payload)) {
       address_mapping_[msg.sender_ip_address] = msg.sender_ethernet_address;
       mapping_queue_.push(make_pair(msg.sender_ip_address, time_));
 
       EthernetFrame e_reply;
       if (msg.opcode == ARPMessage::OPCODE_REQUEST) {
-        // cout << "arp msg rqst " << msg.to_string() << endl;
         if (msg.target_ip_address == ip_address_.ipv4_numeric()) {
           ARPMessage reply = {
             .opcode = ARPMessage::OPCODE_REPLY,
@@ -120,7 +114,6 @@ optional<InternetDatagram> NetworkInterface::recv_frame( const EthernetFrame& fr
             .payload = serialize(reply),
           };
           send_queue_.push(e_reply);
-          
         }
       } else {
         e_reply = arp_mapping_[msg.sender_ip_address];
@@ -128,10 +121,7 @@ optional<InternetDatagram> NetworkInterface::recv_frame( const EthernetFrame& fr
 
         arp_mapping_.erase(msg.sender_ip_address);
         send_queue_.push(e_reply);
-
       }
-
-      
     }
   }
   return {};
